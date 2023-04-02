@@ -13,8 +13,9 @@ class ThumbHash {
   }
 
   ImageProvider toImage() {
-    final image = thumbhash.thumbHashToRGBA(_data);
-    return MemoryImage(image.rgba);
+    final rgbaImage = thumbhash.thumbHashToRGBA(_data);
+    final bmpImage = thumbhash.rgbaToBmp(rgbaImage);
+    return MemoryImage(bmpImage);
   }
 
   Color toAverageColor() {
