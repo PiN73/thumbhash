@@ -1,8 +1,5 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
 library thumbhash;
 
-export 'src/thumbhash_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/image.dart';
+export 'src/rgba.dart';
+export 'src/thumbhash.dart';
