@@ -1,6 +1,8 @@
 name: flutter_thumbhash
-description: A new Flutter package project.
-version: 0.0.0
+description: Flutter implementation of ThumbHash algorithm.
+version: 0.1.0
+repository: https://github.com/PiN73/thumbhash/tree/master/packages/flutter_thumbhash
+homepage: https://evanw.github.io/thumbhash/
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -9,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  thumbhash:
+  thumbhash: ^0.1.0
 
 dependency_overrides:
   thumbhash:

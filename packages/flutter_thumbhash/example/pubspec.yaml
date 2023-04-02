@@ -1,9 +1,6 @@
 name: flutter_thumbhash_example
-description: A new Flutter project.
-
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-version: 0.0.0+0
+description: Demonstrates how to use the flutter_thumbhash package.
+publish_to: none
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -11,7 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_thumbhash:
+  flutter_thumbhash: ^0.1.0
 
 dependency_overrides:
   thumbhash:

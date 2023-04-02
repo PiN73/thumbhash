@@ -1,19 +1,11 @@
-A library for Dart developers.
+[![pub package](https://img.shields.io/pub/v/thumbhash.svg)](https://pub.dev/packages/thumbhash)
+
+Dart implementation of [ThumbHash](https://evanw.github.io/thumbhash/) algorithm.
 
 ## Usage
 
-A simple usage example:
+See [example](example/bin/main.dart)
 
-```dart
-import 'package:thumbhash/thumbhash.dart';
+## Also
 
-main() {
-  var awesome = new Awesome();
-}
-```
-
-## Features and bugs
-
-Please file feature requests and bugs at the [issue tracker][tracker].
-
-[tracker]: http://example.com/issues/replaceme
+Flutter implementation: [flutter_thumbhash](https://pub.dev/packages/flutter_thumbhash)
