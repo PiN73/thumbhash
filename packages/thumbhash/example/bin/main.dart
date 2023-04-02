@@ -36,5 +36,5 @@ void main() {
   final resultFile = File('$root/assets/out.bmp');
   final imageBmp = image.encodeNamedImage(imageWrapped, resultFile.path)!;
   resultFile.writeAsBytesSync(imageBmp);
-  print('Rendered ThumbHash preview to ${resultFile.path}');
+  print('Rendered ThumbHash placeholder to ${resultFile.path}');
 }

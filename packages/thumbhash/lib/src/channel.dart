@@ -2,15 +2,13 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 class Channel {
-  late int nx;
-  late int ny;
+  final int nx;
+  final int ny;
   late double dc;
   late List<double> ac;
   late double scale = 0;
 
-  Channel(int nx, int ny) {
-    this.nx = nx;
-    this.ny = ny;
+  Channel(this.nx, this.ny) {
     int n = 0;
     for (int cy = 0; cy < ny; cy++) {
       for (int cx = cy > 0 ? 0 : 1; cx * ny < nx * (ny - cy); cx++) {

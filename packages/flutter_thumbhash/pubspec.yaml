@@ -1,6 +1,6 @@
 name: flutter_thumbhash
-description: Flutter implementation of ThumbHash algorithm.
-version: 0.1.0
+description: Flutter implementation of ThumbHash algorithm — a very compact representation of an image placeholder.
+version: 0.1.0+1
 repository: https://github.com/PiN73/thumbhash/tree/master/packages/flutter_thumbhash
 homepage: https://evanw.github.io/thumbhash/
 
@@ -20,5 +20,6 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^2.0.1
 
 flutter:

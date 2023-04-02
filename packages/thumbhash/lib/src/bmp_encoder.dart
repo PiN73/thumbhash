@@ -15,7 +15,7 @@ Uint8List rgbaToBmp(Image image) {
 
   final out = ByteWriter(ByteData(fileSize), Endian.little);
 
-  out.writeUint16(_BMP_HEADER_FILETYPE);
+  out.writeUint16(_bmpHeaderFiletype);
   out.writeUint32(fileSize);
   out.writeUint32(0); // reserved
 
@@ -42,4 +42,4 @@ Uint8List rgbaToBmp(Image image) {
   return out.data.buffer.asUint8List();
 }
 
-const _BMP_HEADER_FILETYPE = (0x42) + (0x4D << 8); // BM
+const _bmpHeaderFiletype = (0x42) + (0x4D << 8); // BM

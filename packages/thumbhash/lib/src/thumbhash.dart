@@ -21,24 +21,24 @@ Uint8List rgbaToThumbHash(int w, int h, Uint8List rgba) {
   }
 
   // Determine the average color
-  double avg_r = 0, avg_g = 0, avg_b = 0, avg_a = 0;
+  double avgR = 0, avgG = 0, avgB = 0, avgA = 0;
   for (int i = 0, j = 0; i < w * h; i++, j += 4) {
     double alpha = (rgba[j + 3] & 255) / 255.0;
-    avg_r += alpha / 255.0 * (rgba[j] & 255);
-    avg_g += alpha / 255.0 * (rgba[j + 1] & 255);
-    avg_b += alpha / 255.0 * (rgba[j + 2] & 255);
-    avg_a += alpha;
+    avgR += alpha / 255.0 * (rgba[j] & 255);
+    avgG += alpha / 255.0 * (rgba[j + 1] & 255);
+    avgB += alpha / 255.0 * (rgba[j + 2] & 255);
+    avgA += alpha;
   }
-  if (avg_a > 0) {
-    avg_r /= avg_a;
-    avg_g /= avg_a;
-    avg_b /= avg_a;
+  if (avgA > 0) {
+    avgR /= avgA;
+    avgG /= avgA;
+    avgB /= avgA;
   }
 
-  bool hasAlpha = avg_a < w * h;
-  int l_limit = hasAlpha ? 5 : 7; // Use fewer luminance bits if there's alpha
-  int lx = math.max(1, ((l_limit * w) / math.max(w, h)).round());
-  int ly = math.max(1, ((l_limit * h) / math.max(w, h)).round());
+  bool hasAlpha = avgA < w * h;
+  int lLimit = hasAlpha ? 5 : 7; // Use fewer luminance bits if there's alpha
+  int lx = math.max(1, ((lLimit * w) / math.max(w, h)).round());
+  int ly = math.max(1, ((lLimit * h) / math.max(w, h)).round());
   List<double> l = List<double>.filled(w * h, 0); // luminance
   List<double> p = List<double>.filled(w * h, 0); // yellow - blue
   List<double> q = List<double>.filled(w * h, 0); // red - green
@@ -47,9 +47,9 @@ Uint8List rgbaToThumbHash(int w, int h, Uint8List rgba) {
   // Convert the image from RGBA to LPQA (composite atop the average color)
   for (int i = 0, j = 0; i < w * h; i++, j += 4) {
     double alpha = (rgba[j + 3] & 255) / 255.0;
-    double r = avg_r * (1.0 - alpha) + alpha / 255.0 * (rgba[j] & 255);
-    double g = avg_g * (1.0 - alpha) + alpha / 255.0 * (rgba[j + 1] & 255);
-    double b = avg_b * (1.0 - alpha) + alpha / 255.0 * (rgba[j + 2] & 255);
+    double r = avgR * (1.0 - alpha) + alpha / 255.0 * (rgba[j] & 255);
+    double g = avgG * (1.0 - alpha) + alpha / 255.0 * (rgba[j + 1] & 255);
+    double b = avgB * (1.0 - alpha) + alpha / 255.0 * (rgba[j + 2] & 255);
     l[i] = (r + g + b) / 3.0;
     p[i] = (r + g) / 2.0 - b;
     q[i] = r - g;
@@ -57,44 +57,44 @@ Uint8List rgbaToThumbHash(int w, int h, Uint8List rgba) {
   }
 
   // Encode using the DCT into DC (constant) and normalized AC (varying) terms
-  Channel l_channel = Channel(math.max(3, lx), math.max(3, ly)).encode(w, h, l);
-  Channel p_channel = Channel(3, 3).encode(w, h, p);
-  Channel q_channel = Channel(3, 3).encode(w, h, q);
-  Channel? a_channel = hasAlpha ? Channel(5, 5).encode(w, h, a) : null;
+  Channel lChannel = Channel(math.max(3, lx), math.max(3, ly)).encode(w, h, l);
+  Channel pChannel = Channel(3, 3).encode(w, h, p);
+  Channel qChannel = Channel(3, 3).encode(w, h, q);
+  Channel? aChannel = hasAlpha ? Channel(5, 5).encode(w, h, a) : null;
 
   // Write the constants
   bool isLandscape = w > h;
-  int header24 = (63.0 * l_channel.dc).round() |
-      ((31.5 + 31.5 * p_channel.dc).round() << 6) |
-      ((31.5 + 31.5 * q_channel.dc).round() << 12) |
-      ((31.0 * l_channel.scale).round() << 18) |
+  int header24 = (63.0 * lChannel.dc).round() |
+      ((31.5 + 31.5 * pChannel.dc).round() << 6) |
+      ((31.5 + 31.5 * qChannel.dc).round() << 12) |
+      ((31.0 * lChannel.scale).round() << 18) |
       (hasAlpha ? 1 << 23 : 0);
   int header16 = (isLandscape ? ly : lx) |
-      ((63.0 * p_channel.scale).round() << 3) |
-      ((63.0 * q_channel.scale).round() << 9) |
+      ((63.0 * pChannel.scale).round() << 3) |
+      ((63.0 * qChannel.scale).round() << 9) |
       (isLandscape ? 1 << 15 : 0);
-  int ac_start = hasAlpha ? 6 : 5;
-  int ac_count = l_channel.ac.length +
-      p_channel.ac.length +
-      q_channel.ac.length +
-      (a_channel?.ac.length ?? 0);
-  Uint8List hash = Uint8List(ac_start + (ac_count + 1) ~/ 2);
+  int acStart = hasAlpha ? 6 : 5;
+  int acCount = lChannel.ac.length +
+      pChannel.ac.length +
+      qChannel.ac.length +
+      (aChannel?.ac.length ?? 0);
+  Uint8List hash = Uint8List(acStart + (acCount + 1) ~/ 2);
   hash[0] = header24;
   hash[1] = (header24 >> 8);
   hash[2] = (header24 >> 16);
   hash[3] = header16;
   hash[4] = (header16 >> 8);
-  if (a_channel != null) {
-    hash[5] = ((15.0 * a_channel.dc).round() |
-        ((15.0 * a_channel.scale).round() << 4));
+  if (aChannel != null) {
+    hash[5] = ((15.0 * aChannel.dc).round() |
+        ((15.0 * aChannel.scale).round() << 4));
   }
 
   // Write the varying factors
-  int ac_index = 0;
-  ac_index = l_channel.writeTo(hash, ac_start, ac_index);
-  ac_index = p_channel.writeTo(hash, ac_start, ac_index);
-  ac_index = q_channel.writeTo(hash, ac_start, ac_index);
-  a_channel?.writeTo(hash, ac_start, ac_index);
+  int acIndex = 0;
+  acIndex = lChannel.writeTo(hash, acStart, acIndex);
+  acIndex = pChannel.writeTo(hash, acStart, acIndex);
+  acIndex = qChannel.writeTo(hash, acStart, acIndex);
+  aChannel?.writeTo(hash, acStart, acIndex);
   return hash;
 }
 
@@ -108,13 +108,13 @@ Image thumbHashToRGBA(Uint8List hash) {
   int header24 =
       (hash[0] & 255) | ((hash[1] & 255) << 8) | ((hash[2] & 255) << 16);
   int header16 = (hash[3] & 255) | ((hash[4] & 255) << 8);
-  double l_dc = (header24 & 63) / 63.0;
-  double p_dc = ((header24 >> 6) & 63) / 31.5 - 1.0;
-  double q_dc = ((header24 >> 12) & 63) / 31.5 - 1.0;
-  double l_scale = ((header24 >> 18) & 31) / 31.0;
+  double lDc = (header24 & 63) / 63.0;
+  double pDc = ((header24 >> 6) & 63) / 31.5 - 1.0;
+  double qDc = ((header24 >> 12) & 63) / 31.5 - 1.0;
+  double lScale = ((header24 >> 18) & 31) / 31.0;
   bool hasAlpha = (header24 >> 23) != 0;
-  double p_scale = ((header16 >> 3) & 63) / 63.0;
-  double q_scale = ((header16 >> 9) & 63) / 63.0;
+  double pScale = ((header16 >> 3) & 63) / 63.0;
+  double qScale = ((header16 >> 9) & 63) / 63.0;
   bool isLandscape = (header16 >> 15) != 0;
   int lx = math.max(
       3,
@@ -130,46 +130,46 @@ Image thumbHashToRGBA(Uint8List hash) {
           : hasAlpha
               ? 5
               : 7);
-  double a_dc = hasAlpha ? (hash[5] & 15) / 15.0 : 1.0;
-  double a_scale = ((hash[5] >> 4) & 15) / 15.0;
+  double aDc = hasAlpha ? (hash[5] & 15) / 15.0 : 1.0;
+  double aScale = ((hash[5] >> 4) & 15) / 15.0;
 
   // Read the varying factors (boost saturation by 1.25x to compensate for quantization)
-  int ac_start = hasAlpha ? 6 : 5;
-  int ac_index = 0;
-  Channel l_channel = Channel(lx, ly);
-  Channel p_channel = Channel(3, 3);
-  Channel q_channel = Channel(3, 3);
-  Channel? a_channel;
-  ac_index = l_channel.decode(hash, ac_start, ac_index, l_scale);
-  ac_index = p_channel.decode(hash, ac_start, ac_index, p_scale * 1.25);
-  ac_index = q_channel.decode(hash, ac_start, ac_index, q_scale * 1.25);
+  int acStart = hasAlpha ? 6 : 5;
+  int acIndex = 0;
+  Channel lChannel = Channel(lx, ly);
+  Channel pChannel = Channel(3, 3);
+  Channel qChannel = Channel(3, 3);
+  Channel? aChannel;
+  acIndex = lChannel.decode(hash, acStart, acIndex, lScale);
+  acIndex = pChannel.decode(hash, acStart, acIndex, pScale * 1.25);
+  acIndex = qChannel.decode(hash, acStart, acIndex, qScale * 1.25);
   if (hasAlpha) {
-    a_channel = Channel(5, 5);
-    a_channel.decode(hash, ac_start, ac_index, a_scale);
+    aChannel = Channel(5, 5);
+    aChannel.decode(hash, acStart, acIndex, aScale);
   }
-  List<double> l_ac = l_channel.ac;
-  List<double> p_ac = p_channel.ac;
-  List<double> q_ac = q_channel.ac;
-  List<double>? a_ac = a_channel?.ac;
+  List<double> lAc = lChannel.ac;
+  List<double> pAc = pChannel.ac;
+  List<double> qAc = qChannel.ac;
+  List<double>? aAc = aChannel?.ac;
 
   // Decode using the DCT into RGB
   double ratio = thumbHashToApproximateAspectRatio(hash);
   int w = (ratio > 1.0 ? 32.0 : 32.0 * ratio).round();
   int h = (ratio > 1.0 ? 32.0 / ratio : 32.0).round();
   Uint8List rgba = Uint8List(w * h * 4);
-  int cx_stop = math.max(lx, hasAlpha ? 5 : 3);
-  int cy_stop = math.max(ly, hasAlpha ? 5 : 3);
-  List<double> fx = List<double>.filled(cx_stop, 0);
-  List<double> fy = List<double>.filled(cy_stop, 0);
+  int cxStop = math.max(lx, hasAlpha ? 5 : 3);
+  int cyStop = math.max(ly, hasAlpha ? 5 : 3);
+  List<double> fx = List<double>.filled(cxStop, 0);
+  List<double> fy = List<double>.filled(cyStop, 0);
   for (int y = 0, i = 0; y < h; y++) {
     for (int x = 0; x < w; x++, i += 4) {
-      double l = l_dc, p = p_dc, q = q_dc, a = a_dc;
+      double l = lDc, p = pDc, q = qDc, a = aDc;
 
       // Precompute the coefficients
-      for (int cx = 0; cx < cx_stop; cx++) {
+      for (int cx = 0; cx < cxStop; cx++) {
         fx[cx] = math.cos(math.pi / w * (x + 0.5) * cx);
       }
-      for (int cy = 0; cy < cy_stop; cy++) {
+      for (int cy = 0; cy < cyStop; cy++) {
         fy[cy] = math.cos(math.pi / h * (y + 0.5) * cy);
       }
 
@@ -177,7 +177,7 @@ Image thumbHashToRGBA(Uint8List hash) {
       for (int cy = 0, j = 0; cy < ly; cy++) {
         double fy2 = fy[cy] * 2.0;
         for (int cx = cy > 0 ? 0 : 1; cx * ly < lx * (ly - cy); cx++, j++) {
-          l += l_ac[j] * fx[cx] * fy2;
+          l += lAc[j] * fx[cx] * fy2;
         }
       }
 
@@ -186,17 +186,17 @@ Image thumbHashToRGBA(Uint8List hash) {
         double fy2 = fy[cy] * 2.0;
         for (int cx = cy > 0 ? 0 : 1; cx < 3 - cy; cx++, j++) {
           double f = fx[cx] * fy2;
-          p += p_ac[j] * f;
-          q += q_ac[j] * f;
+          p += pAc[j] * f;
+          q += qAc[j] * f;
         }
       }
 
       // Decode A
-      if (a_ac != null) {
+      if (aAc != null) {
         for (int cy = 0, j = 0; cy < 5; cy++) {
           double fy2 = fy[cy] * 2.0;
           for (int cx = cy > 0 ? 0 : 1; cx < 5 - cy; cx++, j++) {
-            a += a_ac[j] * fx[cx] * fy2;
+            a += aAc[j] * fx[cx] * fy2;
           }
         }
       }
