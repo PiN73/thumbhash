@@ -43,13 +43,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.15.0"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.5"
   fake_async:
     dependency: transitive
     description:
@@ -66,6 +59,13 @@ packages:
     dependency: "direct dev"
     description: flutter
     source: sdk
+    version: "0.0.0"
+  flutter_thumbhash:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
     version: "0.0.0"
   matcher:
     dependency: transitive
@@ -135,6 +135,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.0"
+  thumbhash:
+    dependency: "direct overridden"
+    description:
+      path: "../../thumbhash"
+      relative: true
+    source: path
+    version: "0.0.0"
   typed_data:
     dependency: transitive
     description:

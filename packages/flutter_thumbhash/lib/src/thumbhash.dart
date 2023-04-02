@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -10,6 +11,14 @@ class ThumbHash {
 
   factory ThumbHash.fromBytes(TypedData bytes) {
     return ThumbHash._(bytes.buffer.asUint8List());
+  }
+
+  factory ThumbHash.fromIntList(List<int> list) {
+    return ThumbHash._(Uint8List.fromList(list));
+  }
+
+  factory ThumbHash.fromBase64(String encoded) {
+    return ThumbHash._(base64.decode(base64.normalize(encoded)));
   }
 
   ImageProvider toImage() {
